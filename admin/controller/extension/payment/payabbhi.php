@@ -6,18 +6,19 @@ class ControllerExtensionPaymentPayabbhi extends Controller
 
     public function index()
     {
-        $this->language->load('payment/payabbhi');
+        $this->language->load('extension/payment/payabbhi');
 
         $this->document->setTitle($this->language->get('heading_title'));
 
         $this->load->model('setting/setting');
 
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-            $this->model_setting_setting->editSetting('payabbhi', $this->request->post);
+
+            $this->model_setting_setting->editSetting('payment_payabbhi', $this->request->post);
 
             $this->session->data['success'] = $this->language->get('text_success');
 
-            $this->response->redirect($this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true));
+            $this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true));
         }
 
         $data['heading_title'] = $this->language->get('heading_title');
@@ -41,8 +42,8 @@ class ControllerExtensionPaymentPayabbhi extends Controller
 
         $data['help_access_id'] = $this->language->get('help_access_id');
         $data['help_secret_key'] = $this->language->get('help_secret_key');
-        $data['help_order_status'] = $this->language->get('help_order_status');
         $data['help_payment_auto_capture'] = $this->language->get('help_payment_auto_capture');
+        $data['help_order_status'] = $this->language->get('help_order_status');
 
         if (isset($this->error['warning'])) {
             $data['error_warning'] = $this->error['warning'];
@@ -50,14 +51,14 @@ class ControllerExtensionPaymentPayabbhi extends Controller
             $data['error_warning'] = '';
         }
 
-        if (isset($this->error['payabbhi_access_id'])) {
-            $data['error_access_id'] = $this->error['payabbhi_access_id'];
+        if (isset($this->error['payment_payabbhi_access_id'])) {
+            $data['error_access_id'] = $this->error['payment_payabbhi_access_id'];
         } else {
             $data['error_access_id'] = '';
         }
 
-        if (isset($this->error['payabbhi_secret_key'])) {
-            $data['error_secret_key'] = $this->error['payabbhi_secret_key'];
+        if (isset($this->error['payment_payabbhi_secret_key'])) {
+            $data['error_secret_key'] = $this->error['payment_payabbhi_secret_key'];
         } else {
             $data['error_secret_key'] = '';
         }
@@ -66,67 +67,67 @@ class ControllerExtensionPaymentPayabbhi extends Controller
 
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_home'),
-            'href' => $this->url->link('common/home', 'token='.$this->session->data['token'], 'SSL'),
+            'href' => $this->url->link('common/home', 'user_token=' . $this->session->data['user_token'], 'SSL'),
             'separator' => false,
         );
 
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_payment'),
-            'href' => $this->url->link('extension/payment', 'token='.$this->session->data['token'], 'SSL'),
+            'href' => $this->url->link('extension/payment', 'user_token=' . $this->session->data['user_token'], 'SSL'),
             'separator' => ' :: ',
         );
 
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('heading_title'),
-            'href' => $this->url->link('extension/payment/payabbhi', 'token='.$this->session->data['token'], 'SSL'),
+            'href' => $this->url->link('extension/payment/payabbhi', 'user_token=' . $this->session->data['user_token'], 'SSL'),
             'separator' => ' :: ',
         );
 
-        $data['action'] = $this->url->link('extension/payment/payabbhi', 'token=' . $this->session->data['token'], true);
+        $data['action'] = $this->url->link('extension/payment/payabbhi', 'user_token=' . $this->session->data['user_token'], true);
 
-        $data['cancel'] = $this->url->link('extension/extension', 'token=' . $this->session->data['token'] . '&type=payment', true);
+        $data['cancel'] = $this->url->link('extension/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true);
 
-        if (isset($this->request->post['payabbhi_access_id'])) {
-            $data['payabbhi_access_id'] = $this->request->post['payabbhi_access_id'];
+        if (isset($this->request->post['payment_payabbhi_access_id'])) {
+            $data['payment_payabbhi_access_id'] = $this->request->post['payment_payabbhi_access_id'];
         } else {
-            $data['payabbhi_access_id'] = $this->config->get('payabbhi_access_id');
+            $data['payment_payabbhi_access_id'] = $this->config->get('payment_payabbhi_access_id');
         }
 
-        if (isset($this->request->post['payabbhi_secret_key'])) {
-            $data['payabbhi_secret_key'] = $this->request->post['payabbhi_secret_key'];
+        if (isset($this->request->post['payment_payabbhi_secret_key'])) {
+            $data['payment_payabbhi_secret_key'] = $this->request->post['payment_payabbhi_secret_key'];
         } else {
-            $data['payabbhi_secret_key'] = $this->config->get('payabbhi_secret_key');
+            $data['payment_payabbhi_secret_key'] = $this->config->get('payment_payabbhi_secret_key');
         }
 
-        if (isset($this->request->post['payabbhi_order_status_id'])) {
-            $data['payabbhi_order_status_id'] = $this->request->post['payabbhi_order_status_id'];
+        if (isset($this->request->post['payment_payabbhi_payment_auto_capture'])) {
+            $data['payment_payabbhi_payment_auto_capture'] = $this->request->post['payment_payabbhi_payment_auto_capture'];
         } else {
-            $data['payabbhi_order_status_id'] = $this->config->get('payabbhi_order_status_id');
+            $data['payment_payabbhi_payment_auto_capture'] = $this->config->get('payment_payabbhi_payment_auto_capture');
         }
 
-        if (isset($this->request->post['payabbhi_payment_auto_capture'])) {
-            $data['payabbhi_payment_auto_capture'] = $this->request->post['payabbhi_payment_auto_capture'];
+        if (isset($this->request->post['payment_payabbhi_order_status_id'])) {
+            $data['payment_payabbhi_order_status_id'] = $this->request->post['payment_payabbhi_order_status_id'];
         } else {
-            $data['payabbhi_payment_auto_capture'] = $this->config->get('payabbhi_payment_auto_capture');
+            $data['payment_payabbhi_order_status_id'] = $this->config->get('payment_payabbhi_order_status_id');
         }
 
         $this->load->model('localisation/order_status');
 
         $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
 
-        if (isset($this->request->post['payabbhi_status'])) {
-            $data['payabbhi_status'] = $this->request->post['payabbhi_status'];
+        if (isset($this->request->post['payment_payabbhi_status'])) {
+            $data['payment_payabbhi_status'] = $this->request->post['payment_payabbhi_status'];
         } else {
-            $data['payabbhi_status'] = $this->config->get('payabbhi_status');
+            $data['payment_payabbhi_status'] = $this->config->get('payment_payabbhi_status');
         }
 
-        if (isset($this->request->post['payabbhi_sort_order'])) {
-            $data['payabbhi_sort_order'] = $this->request->post['payabbhi_sort_order'];
+        if (isset($this->request->post['payment_payabbhi_sort_order'])) {
+            $data['payment_payabbhi_sort_order'] = $this->request->post['payment_payabbhi_sort_order'];
         } else {
-            $data['payabbhi_sort_order'] = $this->config->get('payabbhi_sort_order');
+            $data['payment_payabbhi_sort_order'] = $this->config->get('payment_payabbhi_sort_order');
         }
 
-        $this->template = 'payment/payabbhi.tpl';
+        $this->template = 'extension/payment/payabbhi';
         $this->children = array(
             'common/header',
             'common/footer',
@@ -135,7 +136,7 @@ class ControllerExtensionPaymentPayabbhi extends Controller
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
 
-        $this->response->setOutput($this->load->view('payment/payabbhi.tpl', $data));
+        $this->response->setOutput($this->load->view('extension/payment/payabbhi', $data));
     }
 
     protected function validate()
@@ -144,12 +145,12 @@ class ControllerExtensionPaymentPayabbhi extends Controller
             $this->error['warning'] = $this->language->get('error_permission');
         }
 
-        if (!$this->request->post['payabbhi_access_id']) {
-            $this->error['payabbhi_access_id'] = $this->language->get('error_access_id');
+        if (!$this->request->post['payment_payabbhi_access_id']) {
+            $this->error['payment_payabbhi_access_id'] = $this->language->get('error_access_id');
         }
 
-        if (!$this->request->post['payabbhi_secret_key']) {
-            $this->error['payabbhi_secret_key'] = $this->language->get('error_secret_key');
+        if (!$this->request->post['payment_payabbhi_secret_key']) {
+            $this->error['payment_payabbhi_secret_key'] = $this->language->get('error_secret_key');
         }
 
         if (!$this->error) {

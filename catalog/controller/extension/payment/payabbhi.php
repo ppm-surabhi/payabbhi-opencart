@@ -1,6 +1,5 @@
 <?php
-
-require_once __DIR__.'/../../../../system/library/payabbhi-php/init.php';
+require_once 'system/library/payabbhi-php/init.php';
 
 class ControllerExtensionPaymentPayabbhi extends Controller
 {
@@ -10,7 +9,7 @@ class ControllerExtensionPaymentPayabbhi extends Controller
 
         $this->load->model('checkout/order');
 
-        $oc_order = $this->model_checkout_order->getOrder($this->session->data['order_id']);
+        $order_info = $this->model_checkout_order->getOrder($this->session->data['order_id']);
 
         $payabbhi_order_id = null;
         if (!empty($this->session->data['payabbhi_order_id'])) {
@@ -19,7 +18,7 @@ class ControllerExtensionPaymentPayabbhi extends Controller
         try
         {
           if (($payabbhi_order_id === null) or
-              (($payabbhi_order_id and ($this->verify_order_amount($payabbhi_order_id, $oc_order)) === false)))
+              (($payabbhi_order_id and ($this->verify_order_amount($payabbhi_order_id, $order_info)) === false)))
           {
               $payabbhi_order_id = $this->create_payabbhi_order($this->session->data['order_id']);
           }
@@ -31,36 +30,35 @@ class ControllerExtensionPaymentPayabbhi extends Controller
             return;
         }
 
-        $data['access_id'] = $this->config->get('payabbhi_access_id');
-        $data['currency_code'] = $oc_order['currency_code'];
-        $data['total'] = $this->currency->format($oc_order['total'], $oc_order['currency_code'], $oc_order['currency_value'], false) * 100;
+        $data['access_id'] = $this->config->get('payment_payabbhi_access_id');
+        $data['currency_code'] = $order_info['currency_code'];
+        $data['total'] = $this->currency->format($order_info['total'], $order_info['currency_code'], $order_info['currency_value'], false) * 100;
         $data['merchant_order_id'] = $this->session->data['order_id'];
-        $data['card_holder_name'] = $oc_order['payment_firstname'].' '.$oc_order['payment_lastname'];
-        $data['email'] = $oc_order['email'];
-        $data['phone'] = $oc_order['telephone'];
+        $data['card_holder_name'] = $order_info['payment_firstname'] . ' ' . $order_info['payment_lastname'];
+        $data['email'] = $order_info['email'];
+        $data['phone'] = $order_info['telephone'];
         $data['name'] = $this->config->get('config_name');
         $data['lang'] = $this->session->data['language'];
-        $data['return_url'] = $this->url->link('payment/payabbhi/callback', '', 'true');
+        $data['return_url'] = $this->url->link('extension/payment/payabbhi/callback', '', 'true');
         $data['payabbhi_order_id'] = $payabbhi_order_id;
 
-        if (file_exists(DIR_TEMPLATE.$this->config->get('config_template').'/template/payment/payabbhi.tpl'))
+        if (file_exists(DIR_TEMPLATE.$this->config->get('config_template').'/template/extension/payment/payabbhi'))
         {
-            return $this->load->view($this->config->get('config_template').'/template/payment/payabbhi.tpl', $data);
-        }
-        else
-        {
-            return $this->load->view('payment/payabbhi.tpl', $data);
+            return $this->load->view($this->config->get('config_template').'/template/extension/payment/payabbhi', $data);
+        } else {
+            return $this->load->view('extension/payment/payabbhi', $data);
         }
     }
 
+
     protected function create_payabbhi_order($merchant_order_id)
     {
-      $client = new \Payabbhi\Client($this->config->get('payabbhi_access_id'), $this->config->get('payabbhi_secret_key'));
+      $client = new \Payabbhi\Client($this->config->get('payment_payabbhi_access_id'), $this->config->get('payment_payabbhi_secret_key'));
       $oc_order = $this->model_checkout_order->getOrder($merchant_order_id);
       $payabbhi_order_params = array('merchant_order_id'    => $merchant_order_id,
                             'amount'               => $this->currency->format($oc_order['total'], $oc_order['currency_code'], $oc_order['currency_value'], false) * 100,
                             'currency'             => $oc_order['currency_code'],
-                            'payment_auto_capture' => ($this->config->get('payabbhi_payment_auto_capture') === 'true')
+                            'payment_auto_capture' => ($this->config->get('payment_payabbhi_payment_auto_capture') === 'true')
                       );
       $payabbhi_order_id = $client->order->create($payabbhi_order_params)->id;
       $this->session->data['payabbhi_order_id'] = $payabbhi_order_id;
@@ -70,7 +68,7 @@ class ControllerExtensionPaymentPayabbhi extends Controller
 
     protected function verify_order_amount($payabbhi_order_id, $oc_order)
     {
-      $client = new \Payabbhi\Client($this->config->get('payabbhi_access_id'), $this->config->get('payabbhi_secret_key'));
+      $client = new \Payabbhi\Client($this->config->get('payment_payabbhi_access_id'), $this->config->get('payment_payabbhi_secret_key'));
 
       try {
         $payabbhi_order = $client->order->retrieve($payabbhi_order_id);
@@ -111,7 +109,7 @@ class ControllerExtensionPaymentPayabbhi extends Controller
 
             $oc_order = $this->model_checkout_order->getOrder($merchant_order_id);
 
-            $client = new \Payabbhi\Client($this->config->get('payabbhi_access_id'), $this->config->get('payabbhi_secret_key'));
+            $client = new \Payabbhi\Client($this->config->get('payment_payabbhi_access_id'), $this->config->get('payment_payabbhi_secret_key'));
 
             $attributes = array(
               'payment_id'        => $payabbhi_payment_id,
@@ -134,41 +132,27 @@ class ControllerExtensionPaymentPayabbhi extends Controller
 
             if ($success === true)
             {
-                if (!$oc_order['order_status_id'])
-                {
-                    $this->model_checkout_order->confirm($merchant_order_id, $this->config->get('payabbhi_order_status_id'), 'Payment Successful. Payabbhi Payment ID: '. $payabbhi_payment_id . 'Payabbhi Order ID: ' . $payabbhi_order_id, true);
-                }
-                else
-                {
-                    $this->model_checkout_order->update($merchant_order_id, $this->config->get('payabbhi_order_status_id'), 'Payment Successful. Payabbhi Payment ID: '.$payabbhi_payment_id . 'Payabbhi Order ID: ' . $payabbhi_order_id, true);
-                }
+                $this->model_checkout_order->addOrderHistory($merchant_order_id, $this->config->get('payment_payabbhi_order_status_id'), 'Payment Successful. Payabbhi Payment ID: '.$payabbhi_payment_id . 'Payabbhi Order ID: ' . $payabbhi_order_id, true);
 
                 echo '<html>'."\n";
                 echo '<head>'."\n";
                 echo '  <meta http-equiv="Refresh" content="0; url='.$this->url->link('checkout/success').'">'."\n";
                 echo '</head>'."\n";
                 echo '<body>'."\n";
-                echo 'Payment Successful. <p>Please <a href="'.$this->url->link('checkout/success').'">click here to continue</a>!</p>'."\n";
+                echo '  <p>Please follow <a href="'.$this->url->link('checkout/success').'">link</a>!</p>'."\n";
                 echo '</body>'."\n";
                 echo '</html>'."\n";
                 exit();
             }
             else
             {
-                if (!$oc_order['order_status_id'])
-                {
-                    $this->model_checkout_order->confirm($merchant_order_id, 10, $error.' Payment Failed! Check Payabbhi Portal for details of Payment ID: '.$payabbhi_payment_id . 'Payabbhi Order ID: ' . $payabbhi_order_id , true);
-                }
-                else
-                {
-                    $this->model_checkout_order->update($merchant_order_id, 10, $error.' Payment Failed! Check Payabbhi Portal for details of Payment ID: '.$payabbhi_payment_id . 'Payabbhi Order ID: ' . $payabbhi_order_id , true);
-                }
-
+                $this->model_checkout_order->addOrderHistory($merchant_order_id, 10, $error.' Payment Failed! Check Payabbhi Portal for details of Payment ID: '.$payabbhi_payment_id . 'Payabbhi Order ID: ' . $payabbhi_order_id);
                 echo '<html>'."\n";
                 echo '<head>'."\n";
+                echo '  <meta http-equiv="Refresh" content="0; url='.$this->url->link('checkout/failure').'">'."\n";
                 echo '</head>'."\n";
                 echo '<body>'."\n";
-                echo 'Payment Failed. <p>Please <a href="'.$this->url->link('checkout/checkout').'">click here to continue</a>!</p>'."\n";
+                echo '  <p>Please follow <a href="'.$this->url->link('checkout/failure').'">link</a>!</p>'."\n";
                 echo '</body>'."\n";
                 echo '</html>'."\n";
                 exit();
@@ -176,8 +160,22 @@ class ControllerExtensionPaymentPayabbhi extends Controller
         }
         else
         {
-            $message = 'An error occured. Please contact administrator for assistance';
+            if (isset($_POST['error']) === true)
+            {
+                $error = $_POST['error'];
+                $message = 'An error occured. Message : ' . $error['message'] . '. Type : ' . $error['type'];
+                if (isset($error['field']) === true)
+                {
+                    $message .= 'Field : ' . $error['field'];
+                }
+            }
+            else
+            {
+                $message = 'An error occured. Please contact administrator for assistance';
+            }
             echo $message;
         }
+
     }
+
 }

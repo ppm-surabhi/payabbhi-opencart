@@ -1,6 +1,6 @@
 # Payabbhi Payments - OpenCart Integration
 
-This extension builds on top of Payabbhi PHP Library to provide seamless integration of [Payabbhi Checkout ](https://payabbhi.com/docs/checkout) with OpenCart 2.2.x.
+This extension builds on top of Payabbhi PHP Library to provide seamless integration of [Payabbhi Checkout ](https://payabbhi.com/docs/checkout) with OpenCart 3.x.
 
 
 ### Installation
